@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte de Mantenimiento Vehicular</title>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #f1f5f9; color: #1e293b; line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: #fff; padding: 50px 20px 70px; text-align: center;
+  }
+  header h1 { font-size: 1.9rem; margin-bottom: 8px; }
+  header p  { opacity: .9; max-width: 600px; margin: 0 auto; }
+
+  .wrap { max-width: 860px; margin: -40px auto 60px; padding: 0 16px; }
+  form {
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.08);
+    padding: 30px;
+  }
+  @media (max-width: 640px) { form { padding: 20px; } }
+
+  fieldset {
+    border: none; border-top: 2px solid #e2e8f0;
+    padding-top: 20px; margin-top: 20px;
+  }
+  fieldset:first-of-type { border: none; padding-top: 0; margin-top: 0; }
+  legend {
+    font-size: 1.05rem; font-weight: 700; color: #1e3a8a;
+    padding-right: 10px; margin-bottom: 10px;
+  }
+
+  .grid { display: grid; gap: 14px; margin-top: 12px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 640px) { .g2, .g3 { grid-template-columns: 1fr; } }
+  .full { grid-column: 1 / -1; }
+
+  label {
+    display: block; font-size: .82rem; font-weight: 600;
+    color: #475569; margin-bottom: 5px;
+  }
+  label .req { color: #dc2626; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1.5px solid #cbd5e1; border-radius: 8px;
+    font-size: .92rem; font-family: inherit; color: #1e293b;
+    background: #fff; transition: .15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .drop {
+    border: 2px dashed #cbd5e1; border-radius: 10px;
+    padding: 26px; text-align: center;
+    background: #f8fafc; cursor: pointer; transition: .2s;
+    display: block;
+  }
+  .drop:hover, .drop.hover { border-color: #2563eb; background: #eff6ff; }
+  .drop input { display: none; }
+  .drop .icon { font-size: 2.2rem; margin-bottom: 4px; }
+  .drop p { font-size: .85rem; color: #64748b; }
+  .drop b { color: #2563eb; }
+
+  /* Botones de cámara / galería */
+  .acciones-foto {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  @media (max-width: 500px) { .acciones-foto { grid-template-columns: 1fr; } }
+
+  .btn-foto {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 16px; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: .95rem; transition: .2s;
+    border: 2px solid #cbd5e1; background: #fff; color: #1e293b;
+    text-align: center;
+  }
+  .btn-foto:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,23,42,.1); }
+  .btn-foto input { display: none; }
+
+  .btn-camara { border-color: #2563eb; color: #1e3a8a; background: #eff6ff; }
+  .btn-camara:hover { background: #dbeafe; }
+  .btn-galeria { border-color: #16a34a; color: #166534; background: #f0fdf4; }
+  .btn-galeria:hover { background: #dcfce7; }
+
+  .preview {
+    display: grid; gap: 8px; margin-top: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  }
+  .thumb {
+    position: relative; aspect-ratio: 1;
+    border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb button {
+    position: absolute; top: 4px; right: 4px;
+    width: 22px; height: 22px; border: none; border-radius: 50%;
+    background: rgba(220,38,38,.9); color: #fff;
+    font-size: 14px; line-height: 1; cursor: pointer;
+  }
+
+  .btn {
+    width: 100%; padding: 15px; margin-top: 26px;
+    border: none; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: #fff; font-size: 1rem; font-weight: 700;
+    letter-spacing: .3px; transition: .2s;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(37,99,235,.35); }
+  .btn:disabled { opacity: .6; cursor: not-allowed; }
+
+  .nota { text-align: center; font-size: .8rem; color: #64748b; margin-top: 8px; }
+
+  .alerta {
+    display: none; padding: 14px 18px; border-radius: 10px;
+    margin-top: 18px; font-weight: 600; font-size: .9rem;
+  }
+  .alerta.ok    { display: block; background: #dcfce7; color: #166534; border-left: 4px solid #16a34a; }
+  .alerta.error { display: block; background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚗 Reporte de Mantenimiento Vehicular</h1>
+  <p>Llena el formulario, agrega fotos y descarga tu reporte en Word</p>
+</header>
+
+<div class="wrap">
+<form id="form">
+
+  <!-- 1. DATOS -->
+  <fieldset>
+    <legend>1. Datos de quien reporta</legend>
+    <div class="grid g2">
+      <div>
+        <label>Nombre completo <span class="req">*</span></label>
+        <input name="nombre" required>
+      </div>
+      <div>
+        <label>Cargo</label>
+        <input name="cargo" placeholder="Ej. Jefe de Taller">
+      </div>
+      <div>
+        <label>Área / Departamento</label>
+        <input name="area" placeholder="Ej. Servicios Públicos">
+      </div>
+      <div>
+        <label>Teléfono</label>
+        <input name="telefono" type="tel">
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- 2. VEHÍCULO -->
+  <fieldset>
+    <legend>2. Datos del vehículo</legend>
+    <div class="grid g3">
+      <div>
+        <label>Marca <span class="req">*</span></label>
+        <input name="marca" required placeholder="Nissan">
+      </div>
+      <div>
+        <label>Modelo <span class="req">*</span></label>
+        <input name="modelo" required placeholder="NP300">
+      </div>
+      <div>
+        <label>Año</label>
+        <input name="anio" type="number" min="1980" max="2100" placeholder="2020">
+      </div>
+      <div>
+        <label>Placa / Matrícula <span class="req">*</span></label>
+        <input name="placa" required placeholder="ABC-123-A">
+      </div>
+      <div>
+        <label>Número de serie (VIN)</label>
+        <input name="vin" maxlength="17">
+      </div>
+      <div>
+        <label>Color</label>
+        <input name="color">
+      </div>
+      <div>
+        <label>Tipo de unidad</label>
+        <select name="tipoUnidad">
+          <option value="">Seleccione…</option>
+          <option>Sedán</option>
+          <option>Camioneta / Pick-up</option>
+          <option>Utilitario</option>
+          <option>Camión de carga</option>
+          <option>Motocicleta</option>
+          <option>Maquinaria</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div>
+        <label>Kilometraje</label>
+        <input name="kilometraje" placeholder="85,420 km">
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- 3. MANTENIMIENTO -->
+  <fieldset>
+    <legend>3. Detalles del mantenimiento</legend>
+    <div class="grid g2">
+      <div>
+        <label>Tipo <span class="req">*</span></label>
+        <select name="tipoMantenimiento" required>
+          <option value="">Seleccione…</option>
+          <option>Preventivo</option>
+          <option>Correctivo</option>
+          <option>Emergencia</option>
+          <option>Servicio mayor</option>
+        </select>
+      </div>
+      <div>
+        <label>Taller / Proveedor</label>
+        <input name="taller">
+      </div>
+      <div>
+        <label>Fecha de ingreso</label>
+        <input name="fechaIngreso" type="date">
+      </div>
+      <div>
+        <label>Fecha de salida</label>
+        <input name="fechaSalida" type="date">
+      </div>
+      <div>
+        <label>Responsable del servicio</label>
+        <input name="responsable">
+      </div>
+      <div>
+        <label>Costo total (MXN)</label>
+        <input name="costo" placeholder="3,500.00">
+      </div>
+      <div class="full">
+        <label>Descripción de la falla o motivo</label>
+        <textarea name="descripcionFalla" placeholder="Qué se detectó o por qué ingresó la unidad…"></textarea>
+      </div>
+      <div class="full">
+        <label>Trabajos realizados</label>
+        <textarea name="trabajosRealizados" placeholder="Afinación, cambio de balatas, revisión de suspensión…"></textarea>
+      </div>
+      <div class="full">
+        <label>Refacciones cambiadas</label>
+        <textarea name="refacciones" placeholder="Aceite 5W-30, filtro, balatas, bujías…"></textarea>
+      </div>
+      <div>
+        <label>Próximo mantenimiento</label>
+        <input name="proximoMantenimiento" placeholder="Fecha o km">
+      </div>
+      <div>
+        <label>Observaciones</label>
+        <input name="observaciones">
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- 4. FOTOS -->
+  <fieldset>
+    <legend>4. Evidencia fotográfica</legend>
+
+    <!-- Zona de arrastrar (solo escritorio) -->
+    <label class="drop" id="drop">
+      <input type="file" id="fotos" accept="image/*" multiple>
+      <div class="icon">📷</div>
+      <p><b>Haz clic o arrastra las fotos aquí</b></p>
+      <p>Máximo 10 imágenes · hasta 6 MB cada una</p>
+    </label>
+
+    <!-- Botones para cámara y galería -->
+    <div class="acciones-foto">
+      <label class="btn-foto btn-camara">
+        📸 Tomar foto con la cámara
+        <input type="file" id="camara" accept="image/*" capture="environment">
+      </label>
+      <label class="btn-foto btn-galeria">
+        🖼️ Elegir de la galería
+        <input type="file" id="galeria" accept="image/*" multiple>
+      </label>
+    </div>
+
+    <div class="preview" id="preview"></div>
+  </fieldset>
+
+  <button type="submit" class="btn" id="btn">📄 Generar y descargar Word</button>
+  <p class="nota">Se descargará el archivo Word con todos los datos y las fotografías.</p>
+
+  <div class="alerta" id="alerta"></div>
+</form>
+</div>
+
+<script>
+/* =======================================================
+   ⚙️ CONFIGURACIÓN
+   ======================================================= */
+const MAX_FOTOS = 10;
+const MAX_TAMANO_MB = 6;
+/* ======================================================= */
+
+
+/* ---------- Manejo de fotos ---------- */
+const inputFotos   = document.getElementById('fotos');    // zona drag & drop
+const inputCamara  = document.getElementById('camara');   // cámara
+const inputGaleria = document.getElementById('galeria');  // galería
+const drop         = document.getElementById('drop');
+const preview      = document.getElementById('preview');
+let archivos = [];
+
+// Input clásico (drop)
+inputFotos.addEventListener('change', e => {
+  agregar(e.target.files);
+  inputFotos.value = '';
+});
+
+// Cámara: al elegir la foto se agrega y se limpia el input
+// para que puedas volver a tomar otra sin problema
+inputCamara.addEventListener('change', e => {
+  agregar(e.target.files);
+  inputCamara.value = '';
+});
+
+// Galería
+inputGaleria.addEventListener('change', e => {
+  agregar(e.target.files);
+  inputGaleria.value = '';
+});
+
+// Drag & drop
+['dragenter','dragover'].forEach(ev =>
+  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hover'); }));
+['dragleave','drop'].forEach(ev =>
+  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('hover'); }));
+drop.addEventListener('drop', e => agregar(e.dataTransfer.files));
+
+function agregar(lista) {
+  for (const f of lista) {
+    if (!f.type.startsWith('image/')) continue;
+    if (archivos.length >= MAX_FOTOS) { alert(`Máximo ${MAX_FOTOS} fotos`); break; }
+    if (f.size > MAX_TAMANO_MB * 1024 * 1024) { alert(`"${f.name}" supera ${MAX_TAMANO_MB} MB`); continue; }
+    archivos.push(f);
+  }
+  render();
+}
+
+function render() {
+  preview.innerHTML = '';
+  archivos.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '×';
+    btn.onclick = () => { archivos.splice(i, 1); render(); };
+    div.append(img, btn);
+    preview.append(div);
+  });
+}
+
+
+/* ---------- Utilidad: leer archivo ---------- */
+const leerBytes = f => f.arrayBuffer().then(b => new Uint8Array(b));
+
+
+/* ---------- Generar el Word ---------- */
+async function generarWord(datos, fotos) {
+  const {
+    Document, Packer, Paragraph, TextRun,
+    HeadingLevel, ImageRun, AlignmentType
+  } = window.docx;
+
+  const campo = (label, valor) => new Paragraph({
+    spacing: { after: 100 },
+    children: [
+      new TextRun({ text: label + ': ', bold: true }),
+      new TextRun({ text: (valor && String(valor).trim()) || '—' })
+    ]
+  });
+
+  const seccion = t => new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 300, after: 150 },
+    children: [new TextRun(t)]
+  });
+
+  const hijos = [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({
+        text: 'REPORTE DE MANTENIMIENTO VEHICULAR',
+        bold: true, size: 32
+      })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 300 },
+      children: [new TextRun({
+        text: 'Generado el ' + new Date().toLocaleString('es-MX'),
+        italics: true, size: 20, color: '666666'
+      })]
+    }),
+
+    seccion('1. Datos de quien reporta'),
+    campo('Nombre',        datos.nombre),
+    campo('Cargo',         datos.cargo),
+    campo('Área',          datos.area),
+    campo('Teléfono',      datos.telefono),
+
+    seccion('2. Datos del vehículo'),
+    campo('Marca',         datos.marca),
+    campo('Modelo',        datos.modelo),
+    campo('Año',           datos.anio),
+    campo('Placa',         datos.placa),
+    campo('VIN',           datos.vin),
+    campo('Color',         datos.color),
+    campo('Tipo de unidad',datos.tipoUnidad),
+    campo('Kilometraje',   datos.kilometraje),
+
+    seccion('3. Detalles del mantenimiento'),
+    campo('Tipo',                   datos.tipoMantenimiento),
+    campo('Taller / Proveedor',     datos.taller),
+    campo('Fecha de ingreso',       datos.fechaIngreso),
+    campo('Fecha de salida',        datos.fechaSalida),
+    campo('Responsable',            datos.responsable),
+    campo('Costo total (MXN)',      datos.costo),
+    campo('Descripción de la falla',datos.descripcionFalla),
+    campo('Trabajos realizados',    datos.trabajosRealizados),
+    campo('Refacciones cambiadas',  datos.refacciones),
+    campo('Próximo mantenimiento',  datos.proximoMantenimiento),
+    campo('Observaciones',          datos.observaciones)
+  ];
+
+  // Fotos
+  if (fotos.length) {
+    hijos.push(seccion(`4. Evidencia fotográfica (${fotos.length})`));
+
+    for (let i = 0; i < fotos.length; i++) {
+      const f = fotos[i];
+      const bytes = await leerBytes(f);
+      let tipo = (f.type.split('/')[1] || 'png').toLowerCase().replace('jpeg', 'jpg');
+      if (!['jpg','png','gif','bmp'].includes(tipo)) tipo = 'png';
+
+      hijos.push(new Paragraph({
+        spacing: { before: 200 },
+        children: [new TextRun({
+          text: `Foto ${i + 1}: ${f.name}`,
+          bold: true, size: 20
+        })]
+      }));
+
+      hijos.push(new Paragraph({
+        spacing: { after: 200 },
+        children: [new ImageRun({
+          data: bytes,
+          transformation: { width: 500, height: 375 },
+          type: tipo
+        })]
+      }));
+    }
+  }
+
+  const doc = new Document({
+    creator: 'Sistema de Mantenimiento',
+    title: `Reporte ${datos.placa || ''}`,
+    sections: [{ children: hijos }]
+  });
+
+  return await Packer.toBlob(doc);
+}
+
+
+/* ---------- Descargar archivo ---------- */
+function descargar(blob, nombre) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+
+/* ---------- Enviar formulario ---------- */
+const form   = document.getElementById('form');
+const btn    = document.getElementById('btn');
+const alerta = document.getElementById('alerta');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  alerta.className = 'alerta';
+  btn.disabled = true;
+  const txt = btn.textContent;
+  btn.textContent = '⏳ Generando documento…';
+
+  try {
+    const datos = Object.fromEntries(new FormData(form).entries());
+
+    const blob = await generarWord(datos, archivos);
+
+    const placa  = (datos.placa || 'S-N').replace(/[^\w\-]/g, '');
+    const nombre = `Reporte_${placa}_${Date.now()}.docx`;
+    descargar(blob, nombre);
+
+    alerta.className = 'alerta ok';
+    alerta.innerHTML =
+      `✅ <b>Word descargado correctamente:</b> ${nombre}<br>
+       📄 El archivo ya está en tu carpeta de Descargas.`;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch (err) {
+    console.error(err);
+    alerta.className = 'alerta error';
+    alerta.textContent = '❌ Error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = txt;
+  }
+});
+</script>
+
+</body>
+</html>
