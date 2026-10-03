@@ -2,199 +2,198 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="color-scheme" content="light">
 <title>Reporte de Mantenimiento Vehicular</title>
-<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script src="docx.min.js" defer></script>
 <style>
+  :root {
+    color-scheme: light;
+    --bg: #f1f5f9; --card: #fff; --text: #0f172a; --muted: #475569;
+    --line: #cbd5e1; --soft: #e2e8f0; --primary: #2563eb; --primary-d: #1e3a8a;
+    --primary-soft: #eff6ff; --green: #16a34a; --green-soft: #f0fdf4;
+    --red: #dc2626; --red-soft: #fee2e2; --ok-soft: #dcfce7;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: #f1f5f9; color: #1e293b; line-height: 1.5;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
+
   header {
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
-    color: #fff; padding: 50px 20px 70px; text-align: center;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff;
+    padding: calc(22px + env(safe-area-inset-top)) 20px 56px; text-align: center;
   }
-  header h1 { font-size: 1.9rem; margin-bottom: 8px; }
-  header p  { opacity: .9; max-width: 600px; margin: 0 auto; }
+  header h1 { font-size: clamp(1.25rem, 5vw, 1.8rem); margin-bottom: 4px; }
+  header p  { opacity: .9; font-size: .95rem; max-width: 520px; margin: 0 auto; }
 
-  .wrap { max-width: 860px; margin: -40px auto 60px; padding: 0 16px; }
-  form {
-    background: #fff; border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(15,23,42,.08);
-    padding: 30px;
-  }
-  @media (max-width: 640px) { form { padding: 20px; } }
+  .wrap { max-width: 820px; margin: -34px auto 0; padding: 0 14px; }
 
-  fieldset {
-    border: none; border-top: 2px solid #e2e8f0;
-    padding-top: 20px; margin-top: 20px;
+  .card {
+    background: var(--card); border-radius: 14px; padding: 20px;
+    box-shadow: 0 6px 20px rgba(15,23,42,.08); margin-bottom: 14px; border: none;
   }
-  fieldset:first-of-type { border: none; padding-top: 0; margin-top: 0; }
-  legend {
-    font-size: 1.05rem; font-weight: 700; color: #1e3a8a;
-    padding-right: 10px; margin-bottom: 10px;
+  .card h2 {
+    font-size: 1.05rem; color: var(--primary-d); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card h2 .n {
+    display: inline-grid; place-items: center; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--primary); color: #fff; font-size: .85rem;
   }
 
-  .grid { display: grid; gap: 14px; margin-top: 12px; }
-  .g2 { grid-template-columns: 1fr 1fr; }
-  .g3 { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 640px) { .g2, .g3 { grid-template-columns: 1fr; } }
+  .grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
   .full { grid-column: 1 / -1; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .card { padding: 16px; } }
 
-  label {
-    display: block; font-size: .82rem; font-weight: 600;
-    color: #475569; margin-bottom: 5px;
-  }
-  label .req { color: #dc2626; }
+  label { display: block; font-size: .85rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+  label .req { color: var(--red); }
   input, select, textarea {
-    width: 100%; padding: 10px 12px;
-    border: 1.5px solid #cbd5e1; border-radius: 8px;
-    font-size: .92rem; font-family: inherit; color: #1e293b;
-    background: #fff; transition: .15s;
+    width: 100%; min-height: 46px; padding: 10px 12px;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    font-size: 16px; /* evita el zoom en iOS */
+    font-family: inherit; color: var(--text); background: var(--card);
   }
+  textarea { resize: vertical; min-height: 84px; }
   input:focus, select:focus, textarea:focus {
-    outline: none; border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.2);
   }
-  textarea { resize: vertical; min-height: 80px; }
+  input:user-invalid, select:user-invalid, .touched:invalid { border-color: var(--red); }
+  .err { display: none; color: var(--red); font-size: .8rem; margin-top: 4px; }
+  :is(input,select):user-invalid ~ .err, .touched:invalid ~ .err { display: block; }
 
+  /* Fotos */
   .drop {
-    border: 2px dashed #cbd5e1; border-radius: 10px;
-    padding: 26px; text-align: center;
-    background: #f8fafc; cursor: pointer; transition: .2s;
-    display: block;
+    display: none; border: 2px dashed var(--line); border-radius: 12px;
+    padding: 24px; text-align: center; background: var(--bg); cursor: pointer;
+    color: var(--muted); font-size: .9rem; margin: 0;
   }
-  .drop:hover, .drop.hover { border-color: #2563eb; background: #eff6ff; }
-  .drop input { display: none; }
-  .drop .icon { font-size: 2.2rem; margin-bottom: 4px; }
-  .drop p { font-size: .85rem; color: #64748b; }
-  .drop b { color: #2563eb; }
-
-  /* Botones de cámara / galería */
-  .acciones-foto {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 14px;
-  }
-  @media (max-width: 500px) { .acciones-foto { grid-template-columns: 1fr; } }
-
+  .drop.hover { border-color: var(--primary); background: var(--primary-soft); }
+  .drop b { color: var(--primary); }
+  .drop .icon { font-size: 2rem; }
   .btn-foto {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 14px 16px; border-radius: 10px; cursor: pointer;
-    font-weight: 600; font-size: .95rem; transition: .2s;
-    border: 2px solid #cbd5e1; background: #fff; color: #1e293b;
-    text-align: center;
+    min-height: 54px; border-radius: 12px; cursor: pointer; margin: 0;
+    font-weight: 700; font-size: 1rem; text-align: center;
+    border: 2px solid var(--line); color: var(--text); background: var(--card);
   }
-  .btn-foto:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,23,42,.1); }
   .btn-foto input { display: none; }
-
-  .btn-camara { border-color: #2563eb; color: #1e3a8a; background: #eff6ff; }
-  .btn-camara:hover { background: #dbeafe; }
-  .btn-galeria { border-color: #16a34a; color: #166534; background: #f0fdf4; }
-  .btn-galeria:hover { background: #dcfce7; }
-
-  .preview {
-    display: grid; gap: 8px; margin-top: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  .btn-camara  { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-d); }
+  .btn-galeria { border-color: var(--green);   background: var(--green-soft);   color: var(--green); }
+  .acciones-foto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .solo-escritorio { display: none; }
+  @media (hover: none) and (pointer: coarse) { .solo-escritorio { display: none !important; } }
+  @media (hover: hover) and (pointer: fine) {
+    .drop { display: block; margin-bottom: 10px; }
+    .btn-camara { display: none; }
+    .acciones-foto { grid-template-columns: 1fr; }
   }
-  .thumb {
-    position: relative; aspect-ratio: 1;
-    border-radius: 8px; overflow: hidden; border: 2px solid #e2e8f0;
-  }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  @media (max-width: 380px) { .acciones-foto { grid-template-columns: 1fr; } }
+
+  .contador { font-size: .85rem; color: var(--muted); margin-top: 12px; }
+  .preview { display: grid; gap: 10px; margin-top: 10px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .thumb { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid var(--soft); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb button {
-    position: absolute; top: 4px; right: 4px;
-    width: 22px; height: 22px; border: none; border-radius: 50%;
-    background: rgba(220,38,38,.9); color: #fff;
-    font-size: 14px; line-height: 1; cursor: pointer;
+    position: absolute; top: 0; right: 0; width: 44px; height: 44px;
+    border: none; background: none; cursor: pointer; display: grid; place-items: start end; padding: 5px;
+  }
+  .thumb button span {
+    width: 26px; height: 26px; border-radius: 50%; background: rgba(220,38,38,.92);
+    color: #fff; font-size: 18px; line-height: 26px; display: block; text-align: center;
   }
 
+  /* Barra inferior fija */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--card); border-top: 1px solid var(--soft);
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 16px rgba(15,23,42,.1);
+  }
+  .bar-in { max-width: 820px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+  .progreso { flex: 1; min-width: 0; font-size: .78rem; color: var(--muted); }
+  .progreso .pista { height: 6px; background: var(--soft); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .progreso .relleno { height: 100%; width: 0; background: var(--green); transition: width .25s; }
   .btn {
-    width: 100%; padding: 15px; margin-top: 26px;
-    border: none; border-radius: 10px; cursor: pointer;
-    background: linear-gradient(135deg, #1e3a8a, #2563eb);
-    color: #fff; font-size: 1rem; font-weight: 700;
-    letter-spacing: .3px; transition: .2s;
+    flex: 2; min-height: 50px; padding: 0 18px; border: none; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff;
+    font-size: 1rem; font-weight: 700;
   }
-  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(37,99,235,.35); }
-  .btn:disabled { opacity: .6; cursor: not-allowed; }
-
-  .nota { text-align: center; font-size: .8rem; color: #64748b; margin-top: 8px; }
-
-  .alerta {
-    display: none; padding: 14px 18px; border-radius: 10px;
-    margin-top: 18px; font-weight: 600; font-size: .9rem;
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn-sec {
+    min-height: 46px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+    border: 2px solid var(--primary); background: none; color: var(--primary);
+    font-size: .95rem; font-weight: 700;
   }
-  .alerta.ok    { display: block; background: #dcfce7; color: #166534; border-left: 4px solid #16a34a; }
-  .alerta.error { display: block; background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
+  .limpiar {
+    display: block; margin: 4px auto 14px; background: none; border: none;
+    color: var(--muted); text-decoration: underline; font-size: .85rem; cursor: pointer; min-height: 40px;
+  }
+
+  /* Resultado */
+  .resultado { display: none; border-left: 5px solid; }
+  .resultado.ok    { display: block; background: var(--ok-soft); border-color: var(--green); }
+  .resultado.error { display: block; background: var(--red-soft); border-color: var(--red); }
+  .resultado p { font-weight: 600; margin-bottom: 8px; }
+  .resultado .acc { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .aviso { text-align: center; font-size: .78rem; color: var(--muted); margin: 6px 0 10px; }
+
+  @media (hover: hover) { .btn:hover:not(:disabled) { filter: brightness(1.1); } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🚗 Reporte de Mantenimiento Vehicular</h1>
-  <p>Llena el formulario, agrega fotos y descarga tu reporte en Word</p>
+  <h1>🚗 Reporte de Mantenimiento</h1>
+  <p>Llena los datos, agrega fotos y obtén tu reporte en Word</p>
 </header>
 
-<div class="wrap">
-<form id="form">
+<main class="wrap">
 
-  <!-- 1. DATOS -->
-  <fieldset>
-    <legend>1. Datos de quien reporta</legend>
-    <div class="grid g2">
-      <div>
-        <label>Nombre completo <span class="req">*</span></label>
-        <input name="nombre" required>
+<div class="card resultado" id="resultado" role="status" aria-live="polite" tabindex="-1"></div>
+
+<form id="form" novalidate autocomplete="on">
+
+  <section class="card">
+    <h2><span class="n">1</span> Quién reporta</h2>
+    <div class="grid">
+      <div class="full">
+        <label for="nombre">Nombre completo <span class="req">*</span></label>
+        <input id="nombre" name="nombre" required autocomplete="name">
+        <div class="err">Escribe tu nombre</div>
       </div>
       <div>
-        <label>Cargo</label>
-        <input name="cargo" placeholder="Ej. Jefe de Taller">
+        <label for="cargo">Cargo</label>
+        <input id="cargo" name="cargo" placeholder="Ej. Jefe de Taller" autocomplete="organization-title">
       </div>
       <div>
-        <label>Área / Departamento</label>
-        <input name="area" placeholder="Ej. Servicios Públicos">
+        <label for="area">Área / Departamento</label>
+        <input id="area" name="area" placeholder="Ej. Servicios Públicos">
       </div>
       <div>
-        <label>Teléfono</label>
-        <input name="telefono" type="tel">
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel">
       </div>
     </div>
-  </fieldset>
+  </section>
 
-  <!-- 2. VEHÍCULO -->
-  <fieldset>
-    <legend>2. Datos del vehículo</legend>
-    <div class="grid g3">
+  <section class="card">
+    <h2><span class="n">2</span> Vehículo</h2>
+    <div class="grid">
       <div>
-        <label>Marca <span class="req">*</span></label>
-        <input name="marca" required placeholder="Nissan">
+        <label for="placa">Placa <span class="req">*</span></label>
+        <input id="placa" name="placa" required placeholder="ABC-123-A" autocapitalize="characters" autocomplete="off">
+        <div class="err">Escribe la placa</div>
       </div>
       <div>
-        <label>Modelo <span class="req">*</span></label>
-        <input name="modelo" required placeholder="NP300">
-      </div>
-      <div>
-        <label>Año</label>
-        <input name="anio" type="number" min="1980" max="2100" placeholder="2020">
-      </div>
-      <div>
-        <label>Placa / Matrícula <span class="req">*</span></label>
-        <input name="placa" required placeholder="ABC-123-A">
-      </div>
-      <div>
-        <label>Número de serie (VIN)</label>
-        <input name="vin" maxlength="17">
-      </div>
-      <div>
-        <label>Color</label>
-        <input name="color">
-      </div>
-      <div>
-        <label>Tipo de unidad</label>
-        <select name="tipoUnidad">
+        <label for="tipoUnidad">Tipo de unidad</label>
+        <select id="tipoUnidad" name="tipoUnidad">
           <option value="">Seleccione…</option>
           <option>Sedán</option>
           <option>Camioneta / Pick-up</option>
@@ -206,335 +205,506 @@
         </select>
       </div>
       <div>
-        <label>Kilometraje</label>
-        <input name="kilometraje" placeholder="85,420 km">
+        <label for="marca">Marca <span class="req">*</span></label>
+        <input id="marca" name="marca" required placeholder="Nissan" autocomplete="off">
+        <div class="err">Escribe la marca</div>
+      </div>
+      <div>
+        <label for="modelo">Modelo <span class="req">*</span></label>
+        <input id="modelo" name="modelo" required placeholder="NP300" autocomplete="off">
+        <div class="err">Escribe el modelo</div>
+      </div>
+      <div>
+        <label for="anio">Año</label>
+        <input id="anio" name="anio" type="number" inputmode="numeric" min="1980" max="2100" placeholder="2020">
+      </div>
+      <div>
+        <label for="kilometraje">Kilometraje</label>
+        <input id="kilometraje" name="kilometraje" inputmode="numeric" placeholder="85,420 km">
+      </div>
+      <div>
+        <label for="color">Color</label>
+        <input id="color" name="color" autocomplete="off">
+      </div>
+      <div>
+        <label for="vin">Número de serie (VIN)</label>
+        <input id="vin" name="vin" maxlength="17" autocapitalize="characters" autocomplete="off">
       </div>
     </div>
-  </fieldset>
+  </section>
 
-  <!-- 3. MANTENIMIENTO -->
-  <fieldset>
-    <legend>3. Detalles del mantenimiento</legend>
-    <div class="grid g2">
+  <section class="card">
+    <h2><span class="n">3</span> Mantenimiento</h2>
+    <div class="grid">
       <div>
-        <label>Tipo <span class="req">*</span></label>
-        <select name="tipoMantenimiento" required>
+        <label for="tipoMantenimiento">Tipo <span class="req">*</span></label>
+        <select id="tipoMantenimiento" name="tipoMantenimiento" required>
           <option value="">Seleccione…</option>
           <option>Preventivo</option>
           <option>Correctivo</option>
           <option>Emergencia</option>
           <option>Servicio mayor</option>
         </select>
+        <div class="err">Elige el tipo</div>
       </div>
       <div>
-        <label>Taller / Proveedor</label>
-        <input name="taller">
+        <label for="taller">Taller / Proveedor</label>
+        <input id="taller" name="taller" autocomplete="off">
       </div>
       <div>
-        <label>Fecha de ingreso</label>
-        <input name="fechaIngreso" type="date">
+        <label for="fechaIngreso">Fecha de ingreso</label>
+        <input id="fechaIngreso" name="fechaIngreso" type="date">
       </div>
       <div>
-        <label>Fecha de salida</label>
-        <input name="fechaSalida" type="date">
+        <label for="fechaSalida">Fecha de salida</label>
+        <input id="fechaSalida" name="fechaSalida" type="date">
+        <div class="err" id="errFecha">La salida no puede ser antes del ingreso</div>
       </div>
       <div>
-        <label>Responsable del servicio</label>
-        <input name="responsable">
+        <label for="responsable">Responsable del servicio</label>
+        <input id="responsable" name="responsable" autocomplete="off">
       </div>
       <div>
-        <label>Costo total (MXN)</label>
-        <input name="costo" placeholder="3,500.00">
+        <label for="costo">Costo total (MXN)</label>
+        <input id="costo" name="costo" inputmode="decimal" placeholder="3,500.00">
       </div>
       <div class="full">
-        <label>Descripción de la falla o motivo</label>
-        <textarea name="descripcionFalla" placeholder="Qué se detectó o por qué ingresó la unidad…"></textarea>
+        <label for="descripcionFalla">Falla o motivo de ingreso</label>
+        <textarea id="descripcionFalla" name="descripcionFalla" placeholder="Qué se detectó o por qué ingresó la unidad…"></textarea>
       </div>
       <div class="full">
-        <label>Trabajos realizados</label>
-        <textarea name="trabajosRealizados" placeholder="Afinación, cambio de balatas, revisión de suspensión…"></textarea>
+        <label for="trabajosRealizados">Trabajos realizados</label>
+        <textarea id="trabajosRealizados" name="trabajosRealizados" placeholder="Afinación, cambio de balatas, revisión de suspensión…"></textarea>
       </div>
       <div class="full">
-        <label>Refacciones cambiadas</label>
-        <textarea name="refacciones" placeholder="Aceite 5W-30, filtro, balatas, bujías…"></textarea>
+        <label for="refacciones">Refacciones cambiadas</label>
+        <textarea id="refacciones" name="refacciones" placeholder="Aceite 5W-30, filtro, balatas, bujías…"></textarea>
       </div>
-      <div>
-        <label>Próximo mantenimiento</label>
-        <input name="proximoMantenimiento" placeholder="Fecha o km">
+      <div class="full">
+        <label for="proximoMantenimiento">Próximo mantenimiento</label>
+        <input id="proximoMantenimiento" name="proximoMantenimiento" placeholder="Fecha o km">
       </div>
-      <div>
-        <label>Observaciones</label>
-        <input name="observaciones">
+      <div class="full">
+        <label for="observaciones">Observaciones</label>
+        <textarea id="observaciones" name="observaciones"></textarea>
       </div>
     </div>
-  </fieldset>
+  </section>
 
-  <!-- 4. FOTOS -->
-  <fieldset>
-    <legend>4. Evidencia fotográfica</legend>
+  <section class="card">
+    <h2><span class="n">4</span> Fotos</h2>
 
-    <!-- Zona de arrastrar (solo escritorio) -->
-    <label class="drop" id="drop">
-      <input type="file" id="fotos" accept="image/*" multiple>
+    <label class="drop" id="drop" for="galeria">
       <div class="icon">📷</div>
-      <p><b>Haz clic o arrastra las fotos aquí</b></p>
-      <p>Máximo 10 imágenes · hasta 6 MB cada una</p>
+      <b>Arrastra las fotos aquí</b> o usa el botón
     </label>
 
-    <!-- Botones para cámara y galería -->
     <div class="acciones-foto">
-      <label class="btn-foto btn-camara">
-        📸 Tomar foto con la cámara
+      <label class="btn-foto btn-camara">📸 Tomar foto
         <input type="file" id="camara" accept="image/*" capture="environment">
       </label>
-      <label class="btn-foto btn-galeria">
-        🖼️ Elegir de la galería
+      <label class="btn-foto btn-galeria">🖼️ Elegir fotos
         <input type="file" id="galeria" accept="image/*" multiple>
       </label>
     </div>
 
+    <p class="contador" id="contador">Sin fotos (máximo 10). Se reducen solas para que el Word pese poco.</p>
     <div class="preview" id="preview"></div>
-  </fieldset>
+  </section>
 
-  <button type="submit" class="btn" id="btn">📄 Generar y descargar Word</button>
-  <p class="nota">Se descargará el archivo Word con todos los datos y las fotografías.</p>
+  <button type="button" class="limpiar" id="limpiar">Borrar todo y empezar de nuevo</button>
+  <p class="aviso">Tus datos se guardan solos en este dispositivo mientras escribes.</p>
 
-  <div class="alerta" id="alerta"></div>
+  <div class="bar">
+    <div class="bar-in">
+      <div class="progreso" id="progresoTxt">
+        <span id="progresoLbl">Obligatorios 0/5</span>
+        <div class="pista"><div class="relleno" id="relleno"></div></div>
+      </div>
+      <button type="submit" class="btn" id="btn">📄 Generar Word</button>
+    </div>
+  </div>
 </form>
-</div>
+</main>
 
 <script>
-/* =======================================================
-   ⚙️ CONFIGURACIÓN
-   ======================================================= */
 const MAX_FOTOS = 10;
-const MAX_TAMANO_MB = 6;
-/* ======================================================= */
+const LADO_MAX  = 1600;   // px, lado mayor tras comprimir
+const CALIDAD   = 0.8;
+const CLAVE     = 'reporte-mantenimiento-borrador';
 
+const $ = id => document.getElementById(id);
+const form = $('form'), btn = $('btn'), resultado = $('resultado');
+const preview = $('preview'), contador = $('contador'), drop = $('drop');
+let fotos = [];      // {blob, w, h, url, name}
+let ultimo = null;   // {blob, nombre}
 
-/* ---------- Manejo de fotos ---------- */
-const inputFotos   = document.getElementById('fotos');    // zona drag & drop
-const inputCamara  = document.getElementById('camara');   // cámara
-const inputGaleria = document.getElementById('galeria');  // galería
-const drop         = document.getElementById('drop');
-const preview      = document.getElementById('preview');
-let archivos = [];
+/* ---------- Borrador automático ---------- */
+function guardarBorrador() {
+  try { localStorage.setItem(CLAVE, JSON.stringify(Object.fromEntries(new FormData(form)))); } catch {}
+}
+function cargarBorrador() {
+  try {
+    const d = JSON.parse(localStorage.getItem(CLAVE) || '{}');
+    for (const [k, v] of Object.entries(d)) if (form.elements[k]) form.elements[k].value = v;
+  } catch {}
+}
 
-// Input clásico (drop)
-inputFotos.addEventListener('change', e => {
-  agregar(e.target.files);
-  inputFotos.value = '';
+/* ---------- Progreso de campos obligatorios ---------- */
+const obligatorios = [...form.querySelectorAll('[required]')];
+function progreso() {
+  const ok = obligatorios.filter(e => e.value.trim()).length;
+  $('progresoLbl').textContent = ok === obligatorios.length
+    ? '✅ Listo para generar' : `Obligatorios ${ok}/${obligatorios.length}`;
+  $('relleno').style.width = (ok / obligatorios.length * 100) + '%';
+}
+
+/* ---------- Validación de fechas ---------- */
+function validarFechas() {
+  const a = form.fechaIngreso.value, b = form.fechaSalida.value;
+  form.fechaSalida.setCustomValidity(a && b && b < a ? 'La salida no puede ser antes del ingreso' : '');
+  $('errFecha').style.display = form.fechaSalida.validity.customError ? 'block' : 'none';
+}
+$('errFecha').style.display = 'none';
+
+form.addEventListener('input', () => { guardarBorrador(); progreso(); validarFechas(); });
+form.placa.addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+form.vin.addEventListener('input',   e => { e.target.value = e.target.value.toUpperCase(); });
+
+/* ---------- Fotos ---------- */
+['camara', 'galeria'].forEach(id => {
+  const el = $(id);
+  el.addEventListener('change', () => { agregar(el.files); el.value = ''; });
 });
-
-// Cámara: al elegir la foto se agrega y se limpia el input
-// para que puedas volver a tomar otra sin problema
-inputCamara.addEventListener('change', e => {
-  agregar(e.target.files);
-  inputCamara.value = '';
-});
-
-// Galería
-inputGaleria.addEventListener('change', e => {
-  agregar(e.target.files);
-  inputGaleria.value = '';
-});
-
-// Drag & drop
-['dragenter','dragover'].forEach(ev =>
-  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hover'); }));
-['dragleave','drop'].forEach(ev =>
-  drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('hover'); }));
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hover'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('hover'); }));
 drop.addEventListener('drop', e => agregar(e.dataTransfer.files));
 
-function agregar(lista) {
-  for (const f of lista) {
-    if (!f.type.startsWith('image/')) continue;
-    if (archivos.length >= MAX_FOTOS) { alert(`Máximo ${MAX_FOTOS} fotos`); break; }
-    if (f.size > MAX_TAMANO_MB * 1024 * 1024) { alert(`"${f.name}" supera ${MAX_TAMANO_MB} MB`); continue; }
-    archivos.push(f);
+// Reduce la foto y corrige la rotación (EXIF). Si algo falla, usa el original.
+async function comprimir(file) {
+  try {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const k = Math.min(1, LADO_MAX / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close && bmp.close();
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', CALIDAD));
+    if (!blob) throw new Error('toBlob');
+    return { blob, w, h };
+  } catch {
+    const url = URL.createObjectURL(file);
+    const dim = await new Promise(r => {
+      const i = new Image();
+      i.onload = () => r({ w: i.naturalWidth, h: i.naturalHeight });
+      i.onerror = () => r({ w: 4, h: 3 });
+      i.src = url;
+    });
+    URL.revokeObjectURL(url);
+    return { blob: file, ...dim };
   }
-  render();
 }
 
-function render() {
+async function agregar(lista) {
+  const imgs = [...lista].filter(f => f.type.startsWith('image/'));
+  contador.textContent = 'Procesando fotos…';
+  for (const f of imgs) {
+    if (fotos.length >= MAX_FOTOS) { alert(`Máximo ${MAX_FOTOS} fotos`); break; }
+    const r = await comprimir(f);
+    fotos.push({ ...r, url: URL.createObjectURL(r.blob), name: f.name || `foto${fotos.length + 1}.jpg` });
+  }
+  renderFotos();
+}
+
+function renderFotos() {
   preview.innerHTML = '';
-  archivos.forEach((f, i) => {
-    const div = document.createElement('div');
-    div.className = 'thumb';
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(f);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = '×';
-    btn.onclick = () => { archivos.splice(i, 1); render(); };
-    div.append(img, btn);
-    preview.append(div);
+  fotos.forEach((f, i) => {
+    const d = document.createElement('div');
+    d.className = 'thumb';
+    const img = new Image(); img.src = f.url; img.alt = `Foto ${i + 1}`;
+    const b = document.createElement('button');
+    b.type = 'button'; b.setAttribute('aria-label', `Quitar foto ${i + 1}`);
+    b.innerHTML = '<span>×</span>';
+    b.onclick = () => { URL.revokeObjectURL(f.url); fotos.splice(i, 1); renderFotos(); };
+    d.append(img, b);
+    preview.append(d);
   });
+  contador.textContent = fotos.length
+    ? `${fotos.length} de ${MAX_FOTOS} fotos agregadas`
+    : `Sin fotos (máximo ${MAX_FOTOS}). Se reducen solas para que el Word pese poco.`;
 }
 
-
-/* ---------- Utilidad: leer archivo ---------- */
-const leerBytes = f => f.arrayBuffer().then(b => new Uint8Array(b));
-
-
-/* ---------- Generar el Word ---------- */
-async function generarWord(datos, fotos) {
+/* ---------- Generar Word ---------- */
+async function generarWord(datos) {
   const {
-    Document, Packer, Paragraph, TextRun,
-    HeadingLevel, ImageRun, AlignmentType
+    Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, Table, TableRow, TableCell,
+    WidthType, ShadingType, BorderStyle, Header, Footer, PageNumber, VerticalAlign, TableLayoutType
   } = window.docx;
 
-  const campo = (label, valor) => new Paragraph({
-    spacing: { after: 100 },
-    children: [
-      new TextRun({ text: label + ': ', bold: true }),
-      new TextRun({ text: (valor && String(valor).trim()) || '—' })
-    ]
+  const AZUL = '1E3A8A', GRIS = '64748B', LINEA = 'CBD5E1', FONDO = 'EFF6FF';
+  const W = 10080;                       // ancho útil (twips): carta con márgenes de 0.75"
+  const LAB = 1900, VAL = 3140;          // etiqueta / valor (2 pares por fila)
+  const borde = { style: BorderStyle.SINGLE, size: 4, color: LINEA };
+  const bordes = { top: borde, bottom: borde, left: borde, right: borde };
+  const sinBorde = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const sinBordes = { top: sinBorde, bottom: sinBorde, left: sinBorde, right: sinBorde };
+  const margenes = { top: 70, bottom: 70, left: 110, right: 110 };
+
+  const fecha = v => (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v.split('-').reverse().join('/') : v;
+  const dinero = v => (v && /^[\d.,\s]+$/.test(v.trim())) ? `$ ${v.trim()} MXN` : v;
+  const texto = v => (v && String(v).trim()) || '—';
+  const hoy = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const parrafos = v => texto(v).split(/\r?\n/).map(l =>
+    new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: l })] }));
+
+  const celdaEtiqueta = (t, ancho) => new TableCell({
+    width: { size: ancho, type: WidthType.DXA }, borders: bordes, margins: margenes,
+    shading: { type: ShadingType.CLEAR, fill: FONDO, color: 'auto' },
+    verticalAlign: VerticalAlign.CENTER,
+    children: [new Paragraph({ children: [new TextRun({ text: t, bold: true, size: 20, color: AZUL })] })]
+  });
+  const celdaValor = (v, ancho, span) => new TableCell({
+    width: { size: ancho, type: WidthType.DXA }, borders: bordes, margins: margenes,
+    columnSpan: span, verticalAlign: VerticalAlign.CENTER, children: parrafos(v)
   });
 
+  // pares = [[etiqueta, valor], ...] (cortos, de 2 en 2). largos = filas de ancho completo.
+  const tabla = (pares, largos = []) => {
+    const filas = [];
+    for (let i = 0; i < pares.length; i += 2) {
+      const a = pares[i], b = pares[i + 1];
+      filas.push(new TableRow({ cantSplit: true, children: [
+        celdaEtiqueta(a[0], LAB), celdaValor(a[1], VAL, 1),
+        ...(b ? [celdaEtiqueta(b[0], LAB), celdaValor(b[1], VAL, 1)]
+              : [celdaValor('', LAB + VAL, 2)])
+      ]}));
+    }
+    largos.forEach(([e, v]) => filas.push(new TableRow({ cantSplit: true, children: [
+      celdaEtiqueta(e, LAB), celdaValor(v, W - LAB, 3)
+    ]})));
+    return new Table({
+      width: { size: W, type: WidthType.DXA }, layout: TableLayoutType.FIXED,
+      columnWidths: [LAB, VAL, LAB, VAL], rows: filas
+    });
+  };
+
   const seccion = t => new Paragraph({
-    heading: HeadingLevel.HEADING_2,
-    spacing: { before: 300, after: 150 },
-    children: [new TextRun(t)]
+    keepNext: true, spacing: { before: 320, after: 140 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: AZUL, space: 2 } },
+    children: [new TextRun({ text: t.toUpperCase(), bold: true, size: 24, color: AZUL })]
+  });
+
+  const vacio = () => new Paragraph({ spacing: { after: 0 }, children: [] });
+
+  // Banner de título
+  const banner = new Table({
+    width: { size: W, type: WidthType.DXA }, layout: TableLayoutType.FIXED, columnWidths: [W],
+    rows: [new TableRow({ children: [new TableCell({
+      width: { size: W, type: WidthType.DXA }, borders: sinBordes,
+      shading: { type: ShadingType.CLEAR, fill: AZUL, color: 'auto' },
+      margins: { top: 220, bottom: 220, left: 280, right: 280 },
+      children: [
+        new Paragraph({ children: [new TextRun({ text: 'REPORTE DE MANTENIMIENTO VEHICULAR', bold: true, size: 36, color: 'FFFFFF' })] }),
+        new Paragraph({ spacing: { before: 60 }, children: [new TextRun({
+          text: `Unidad: ${texto(datos.placa)}   |   Fecha de emisión: ${hoy}`, size: 21, color: 'DBEAFE' })] })
+      ]
+    })]})]
   });
 
   const hijos = [
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({
-        text: 'REPORTE DE MANTENIMIENTO VEHICULAR',
-        bold: true, size: 32
-      })]
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 300 },
-      children: [new TextRun({
-        text: 'Generado el ' + new Date().toLocaleString('es-MX'),
-        italics: true, size: 20, color: '666666'
-      })]
-    }),
+    banner,
 
     seccion('1. Datos de quien reporta'),
-    campo('Nombre',        datos.nombre),
-    campo('Cargo',         datos.cargo),
-    campo('Área',          datos.area),
-    campo('Teléfono',      datos.telefono),
+    tabla([['Nombre', datos.nombre], ['Cargo', datos.cargo],
+           ['Área', datos.area], ['Teléfono', datos.telefono]]),
 
     seccion('2. Datos del vehículo'),
-    campo('Marca',         datos.marca),
-    campo('Modelo',        datos.modelo),
-    campo('Año',           datos.anio),
-    campo('Placa',         datos.placa),
-    campo('VIN',           datos.vin),
-    campo('Color',         datos.color),
-    campo('Tipo de unidad',datos.tipoUnidad),
-    campo('Kilometraje',   datos.kilometraje),
+    tabla([['Placa', datos.placa], ['Tipo de unidad', datos.tipoUnidad],
+           ['Marca', datos.marca], ['Modelo', datos.modelo],
+           ['Año', datos.anio], ['Color', datos.color],
+           ['VIN', datos.vin], ['Kilometraje', datos.kilometraje]]),
 
     seccion('3. Detalles del mantenimiento'),
-    campo('Tipo',                   datos.tipoMantenimiento),
-    campo('Taller / Proveedor',     datos.taller),
-    campo('Fecha de ingreso',       datos.fechaIngreso),
-    campo('Fecha de salida',        datos.fechaSalida),
-    campo('Responsable',            datos.responsable),
-    campo('Costo total (MXN)',      datos.costo),
-    campo('Descripción de la falla',datos.descripcionFalla),
-    campo('Trabajos realizados',    datos.trabajosRealizados),
-    campo('Refacciones cambiadas',  datos.refacciones),
-    campo('Próximo mantenimiento',  datos.proximoMantenimiento),
-    campo('Observaciones',          datos.observaciones)
+    tabla(
+      [['Tipo', datos.tipoMantenimiento], ['Taller / Proveedor', datos.taller],
+       ['Fecha de ingreso', fecha(datos.fechaIngreso)], ['Fecha de salida', fecha(datos.fechaSalida)],
+       ['Responsable', datos.responsable], ['Costo total', dinero(datos.costo)]],
+      [['Falla o motivo', datos.descripcionFalla],
+       ['Trabajos realizados', datos.trabajosRealizados],
+       ['Refacciones', datos.refacciones],
+       ['Próximo mantenimiento', datos.proximoMantenimiento],
+       ['Observaciones', datos.observaciones]]
+    )
   ];
 
-  // Fotos
+  // Fotos: 2 por fila, con proporción real
   if (fotos.length) {
     hijos.push(seccion(`4. Evidencia fotográfica (${fotos.length})`));
-
-    for (let i = 0; i < fotos.length; i++) {
-      const f = fotos[i];
-      const bytes = await leerBytes(f);
-      let tipo = (f.type.split('/')[1] || 'png').toLowerCase().replace('jpeg', 'jpg');
-      if (!['jpg','png','gif','bmp'].includes(tipo)) tipo = 'png';
-
-      hijos.push(new Paragraph({
-        spacing: { before: 200 },
-        children: [new TextRun({
-          text: `Foto ${i + 1}: ${f.name}`,
-          bold: true, size: 20
-        })]
-      }));
-
-      hijos.push(new Paragraph({
-        spacing: { after: 200 },
-        children: [new ImageRun({
-          data: bytes,
-          transformation: { width: 500, height: 375 },
-          type: tipo
-        })]
-      }));
+    const mitad = W / 2;
+    const celdaFoto = async (f, n) => {
+      if (!f) return new TableCell({ width: { size: mitad, type: WidthType.DXA }, borders: sinBordes, children: [vacio()] });
+      const bytes = new Uint8Array(await f.blob.arrayBuffer());
+      const k = Math.min(320 / f.w, 300 / f.h);
+      return new TableCell({
+        width: { size: mitad, type: WidthType.DXA }, borders: sinBordes,
+        margins: { top: 80, bottom: 80, left: 80, right: 80 },
+        children: [
+          new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, children: [new ImageRun({
+            data: bytes, type: f.blob.type === 'image/png' ? 'png' : 'jpg',
+            transformation: { width: Math.round(f.w * k), height: Math.round(f.h * k) }
+          })]}),
+          new Paragraph({ alignment: AlignmentType.CENTER, children: [
+            new TextRun({ text: `Foto ${n}`, italics: true, size: 18, color: GRIS })] })
+        ]
+      });
+    };
+    const filas = [];
+    for (let i = 0; i < fotos.length; i += 2) {
+      filas.push(new TableRow({ cantSplit: true, children: [
+        await celdaFoto(fotos[i], i + 1), await celdaFoto(fotos[i + 1], i + 2)
+      ]}));
     }
+    hijos.push(new Table({ width: { size: W, type: WidthType.DXA }, layout: TableLayoutType.FIXED,
+      columnWidths: [mitad, mitad], rows: filas }));
   }
+
+  // Firmas
+  const FIRMA = W / 2 - 300;
+  const linea = { style: BorderStyle.SINGLE, size: 6, color: '334155' };
+  const centrado = (t, o) => new Paragraph({ alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: t, ...o })] });
+  const celdaFirma = (rol, nombre, cargo) => new TableCell({
+    width: { size: FIRMA, type: WidthType.DXA },
+    borders: { ...sinBordes, top: linea }, margins: { top: 80, bottom: 0, left: 120, right: 120 },
+    children: [
+      centrado(rol, { bold: true, size: 20, color: AZUL }),
+      centrado(nombre || ' ', { size: 20 }),
+      centrado(cargo || ' ', { size: 18, color: GRIS })
+    ]
+  });
+  hijos.push(
+    new Paragraph({ spacing: { before: 800 }, keepNext: true, children: [] }),
+    new Table({
+      width: { size: W, type: WidthType.DXA }, layout: TableLayoutType.FIXED,
+      columnWidths: [FIRMA, 600, FIRMA],
+      rows: [new TableRow({ cantSplit: true, children: [
+        celdaFirma('Elaboró', (datos.nombre || '').trim(), (datos.cargo || '').trim()),
+        new TableCell({ width: { size: 600, type: WidthType.DXA }, borders: sinBordes, children: [vacio()] }),
+        celdaFirma('Revisó / Vo. Bo.', '', '')
+      ]})]
+    })
+  );
 
   const doc = new Document({
     creator: 'Sistema de Mantenimiento',
-    title: `Reporte ${datos.placa || ''}`,
-    sections: [{ children: hijos }]
+    title: `Reporte de mantenimiento ${datos.placa || ''}`,
+    styles: { default: { document: { run: { font: 'Calibri', size: 22, color: '1E293B' } } } },
+    sections: [{
+      properties: { page: {
+        size: { width: 12240, height: 15840 },
+        margin: { top: 1300, bottom: 1100, left: 1080, right: 1080, header: 500, footer: 500 }
+      }},
+      headers: { default: new Header({ children: [new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINEA, space: 4 } },
+        children: [new TextRun({ text: `Reporte de Mantenimiento Vehicular  ·  ${texto(datos.placa)}`, size: 18, color: GRIS })]
+      })] }) },
+      footers: { default: new Footer({ children: [new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ size: 18, color: GRIS, children: ['Página ', PageNumber.CURRENT, ' de ', PageNumber.TOTAL_PAGES] })]
+      })] }) },
+      children: hijos
+    }]
   });
-
-  return await Packer.toBlob(doc);
+  return Packer.toBlob(doc);
 }
 
-
-/* ---------- Descargar archivo ---------- */
 function descargar(blob, nombre) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = nombre;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
-/* ---------- Enviar formulario ---------- */
-const form   = document.getElementById('form');
-const btn    = document.getElementById('btn');
-const alerta = document.getElementById('alerta');
+function mostrar(tipo, html) {
+  resultado.className = 'card resultado ' + tipo;
+  resultado.innerHTML = html;
+  resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  resultado.focus({ preventScroll: true });
+}
 
-form.addEventListener('submit', async (e) => {
+/* ---------- Enviar ---------- */
+form.addEventListener('submit', async e => {
   e.preventDefault();
-  alerta.className = 'alerta';
+  validarFechas();
+  if (!form.checkValidity()) {
+    const malo = form.querySelector(':invalid');
+    malo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    malo.focus({ preventScroll: true });
+    // marca los campos faltantes en rojo
+    form.querySelectorAll(':invalid').forEach(el => el.classList.add('touched'));
+    mostrar('error', '<p>❌ Faltan campos obligatorios (marcados con *).</p>');
+    return;
+  }
+  if (!window.docx) { mostrar('error', '<p>❌ No se cargó el generador de Word. Recarga la página.</p>'); return; }
+
   btn.disabled = true;
   const txt = btn.textContent;
-  btn.textContent = '⏳ Generando documento…';
-
+  btn.textContent = '⏳ Generando…';
   try {
-    const datos = Object.fromEntries(new FormData(form).entries());
-
-    const blob = await generarWord(datos, archivos);
-
-    const placa  = (datos.placa || 'S-N').replace(/[^\w\-]/g, '');
-    const nombre = `Reporte_${placa}_${Date.now()}.docx`;
+    const datos = Object.fromEntries(new FormData(form));
+    const blob = await generarWord(datos);
+    const placa = (datos.placa || 'S-N').replace(/[^\w\-]/g, '');
+    const nombre = `Reporte_${placa}_${new Date().toISOString().slice(0, 10)}.docx`;
+    ultimo = { blob, nombre };
     descargar(blob, nombre);
 
-    alerta.className = 'alerta ok';
-    alerta.innerHTML =
-      `✅ <b>Word descargado correctamente:</b> ${nombre}<br>
-       📄 El archivo ya está en tu carpeta de Descargas.`;
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
+    const file = new File([blob], nombre, { type: DOCX_MIME });
+    const puedeCompartir = navigator.canShare && navigator.canShare({ files: [file] });
+    mostrar('ok',
+      `<p>✅ Word listo: ${nombre}</p>
+       <div class="acc">
+         <button type="button" class="btn-sec" id="otraVez">⬇️ Descargar otra vez</button>
+         ${puedeCompartir ? '<button type="button" class="btn-sec" id="compartir">📤 Compartir</button>' : ''}
+       </div>`);
+    $('otraVez').onclick = () => descargar(ultimo.blob, ultimo.nombre);
+    if (puedeCompartir) $('compartir').onclick = () =>
+      navigator.share({ files: [file], title: 'Reporte de mantenimiento' }).catch(() => {});
   } catch (err) {
     console.error(err);
-    alerta.className = 'alerta error';
-    alerta.textContent = '❌ Error: ' + err.message;
+    mostrar('error', '<p>❌ Error: ' + err.message + '</p>');
   } finally {
     btn.disabled = false;
     btn.textContent = txt;
   }
 });
-</script>
 
+/* ---------- Limpiar ---------- */
+$('limpiar').addEventListener('click', () => {
+  if (!confirm('¿Borrar todos los datos y las fotos?')) return;
+  form.reset();
+  fotos.forEach(f => URL.revokeObjectURL(f.url));
+  fotos = [];
+  try { localStorage.removeItem(CLAVE); } catch {}
+  resultado.className = 'card resultado';
+  renderFotos(); progreso(); validarFechas();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ---------- Inicio ---------- */
+cargarBorrador(); progreso(); validarFechas(); renderFotos();
+
+// Funciona sin internet después de la primera visita
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>
